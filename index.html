@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Balaço - Dashboard</title>
+<style>
+    body { margin:0; font-family: Arial; background:#e8f0ff; }
+    .sidebar { width:240px; height:100vh; background:#0a2a66; color:white; position:fixed; padding:20px; box-sizing:border-box; }
+    .sidebar h2 { text-align:center; margin-bottom:30px; }
+    .sidebar a { display:block; padding:12px; margin-bottom:10px; background:#2563eb; border-radius:8px; text-decoration:none; color:white; cursor:pointer; }
+    .main { margin-left:260px; padding:20px; }
+    .card { background:white; padding:18px; border-radius:15px; width:250px; display:inline-block; margin-right:20px; margin-bottom:20px; }
+    .card h3 { margin:0; color:#0a2a66; font-size:18px; }
+    #section-dashboard, #section-clientes, #section-revendas { display:none; }
+    .input-block { margin-bottom:12px; }
+    input, select { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
+    button { padding:10px 16px; background:#2563eb; color:white; border:none; border-radius:8px; cursor:pointer; }
+    .small-btn { padding:6px 8px; font-size:13px; margin-left:6px; border-radius:6px; }
+    .table-actions { display:flex; gap:6px; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+    th { background:#dbeafe; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>TV Balaço</h2>
+    <a onclick="showPage('dashboard')">Dashboard</a>
+    <a onclick="showPage('clientes')">Clientes</a>
+    <a onclick="showPage('revendas')">Revendas</a>
+</div>
+
+<div class="main">
+    <div id="section-dashboard">
+        <h1>Dashboard Financeiro</h1>
+        <div class="card"><h3>Total Recebido</h3><p id="totalRecebido">R$ 0,00</p></div>
+        <div class="card"><h3>Pendentes</h3><p id="totalPendente">R$ 0,00</p></div>
+        <div class="card"><h3>Atrasados</h3><p id="totalAtrasado">0</p></div>
+    </div>
+
+    <div id="section-clientes">
+        <h1>Clientes</h1>
+        <div class="input-block"><input id="c_nome" placeholder="Nome do cliente" /></div>
+        <div class="input-block"><input type="number" id="c_valor" placeholder="Valor (R$)" /></div>
+        <div class="input-block"><input type="date" id="c_data" /></div>
+        <button onclick="addCliente()">Cadastrar Cliente</button>
+        <table>
+            <thead><tr><th>Nome</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="listaClientes"></tbody>
+        </table>
+    </div>
+
+    <div id="section-revendas">
+        <h1>Revendas</h1>
+        <div class="input-block"><input id="r_nome" placeholder="Nome da Revenda" /></div>
+        <div class="input-block"><input type="number" id="r_valor" placeholder="Valor (R$)" /></div>
+        <div class="input-block"><input type="date" id="r_data" /></div>
+        <button onclick="addRevenda()">Cadastrar Revenda</button>
+        <table>
+            <thead><tr><th>Nome</th><th>Valor</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="listaRevendas"></tbody>
+        </table>
+    </div>
+
+    <button onclick="downloadHTML()" style="margin-top:20px;">Baixar Dashboard</button>
+</div>
+
+<script>
+let clientes = JSON.parse(localStorage.getItem('clientesTVBalaco') || '[]');
+let revendas = JSON.parse(localStorage.getItem('revendasTVBalaco') || '[]');
+
+function showPage(page){
+    document.getElementById('section-dashboard').style.display='none';
+    document.getElementById('section-clientes').style.display='none';
+    document.getElementById('section-revendas').style.display='none';
+    document.getElementById('section-'+page).style.display='block';
+    if(page==='dashboard') updateDashboard();
+}
+
+function saveData(){
+    localStorage.setItem('clientesTVBalaco', JSON.stringify(clientes));
+    localStorage.setItem('revendasTVBalaco', JSON.stringify(revendas));
+}
+
+function addCliente(){
+    let nome=document.getElementById('c_nome').value.trim();
+    let valor=parseFloat(document.getElementById('c_valor').value||0);
+    let data=document.getElementById('c_data').value;
+    if(!nome||!valor||!data)return alert('Preencha todos os campos!');
+    clientes.push({nome,valor,data,pago:false});
+    saveData(); renderClientes(); updateDashboard();
+}
+
+function addRevenda(){
+    let nome=document.getElementById('r_nome').value.trim();
+    let valor=parseFloat(document.getElementById('r_valor').value||0);
+    let data=document.getElementById('r_data').value;
+    if(!nome||!valor||!data)return alert('Preencha todos os campos!');
+    revendas.push({nome,valor,data,pago:false});
+    saveData(); renderRevendas(); updateDashboard();
+}
+
+function renderClientes(){
+    let html='';
+    clientes.forEach((c,i)=>{
+        html+=`<tr><td>${c.nome}</td><td>R$ ${c.valor.toFixed(2)}</td><td>${c.data}</td><td><button onclick="renewItem('cliente',${i})">Renovar</button> <button onclick="editItem('cliente',${i})">Editar</button> <button onclick="deleteItem('cliente',${i})">Deletar</button></td></tr>`;
+    });
+    document.getElementById('listaClientes').innerHTML=html;
+}
+
+function renderRevendas(){
+    let html='';
+    revendas.forEach((r,i)=>{
+        html+=`<tr><td>${r.nome}</td><td>R$ ${r.valor.toFixed(2)}</td><td>${r.data}</td><td><button onclick="renewItem('revenda',${i})">Renovar</button> <button onclick="editItem('revenda',${i})">Editar</button> <button onclick="deleteItem('revenda',${i})">Deletar</button></td></tr>`;
+    });
+    document.getElementById('listaRevendas').innerHTML=html;
+}
+
+function renewItem(tipo,i){
+    let item = (tipo==='cliente') ? clientes[i] : revendas[i];
+    let parts = item.data.split('-');
+    let year = parseInt(parts[0]), month = parseInt(parts[1]), day = parseInt(parts[2]);
+    month += 1; if(month>12){ month=1; year+=1; }
+    let daysInMonth = new Date(year, month, 0).getDate();
+    if(day>daysInMonth) day=daysInMonth;
+    item.data = `${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+    item.pago = false;
+    saveData(); renderClientes(); renderRevendas(); updateDashboard();
+}
+
+function editItem(tipo,i){
+    let item = (tipo==='cliente') ? clientes[i] : revendas[i];
+    let nome = prompt('Nome:', item.nome);
+    let valor = prompt('Valor (R$):', item.valor);
+    let data = prompt('Data (YYYY-MM-DD):', item.data);
+    if(!nome||isNaN(parseFloat(valor))||!/^\d{4}-\d{2}-\d{2}$/.test(data)) return alert('Dados inválidos!');
+    item.nome = nome.trim(); item.valor = parseFloat(valor); item.data = data;
+    saveData(); renderClientes(); renderRevendas(); updateDashboard();
+}
+
+function deleteItem(tipo,i){
+    if(!confirm('Confirma excluir este registro?')) return;
+    if(tipo==='cliente') clientes.splice(i,1);
+    else revendas.splice(i,1);
+    saveData(); renderClientes(); renderRevendas(); updateDashboard();
+}
+
+function updateDashboard(){
+    let totalRecebido=0,totalPendente=0,atrasados=0;
+    let hoje=new Date().toISOString().slice(0,10);
+    [...clientes,...revendas].forEach(item=>{
+        if(item.pago) totalRecebido+=item.valor;
+        else {totalPendente+=item.valor; if(item.data<hoje) atrasados++;}
+    });
+    document.getElementById('totalRecebido').innerText='R$ '+totalRecebido.toFixed(2);
+    document.getElementById('totalPendente').innerText='R$ '+totalPendente.toFixed(2);
+    document.getElementById('totalAtrasado').innerText=atrasados;
+}
+
+function downloadHTML(){
+    let blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
+    let link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'TVBalaçoDashboard.html';
+    link.click();
+}
+
+renderClientes(); renderRevendas(); showPage('dashboard');
+</script>
+
+</body>
+</html>
