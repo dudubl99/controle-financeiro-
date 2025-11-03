@@ -91,7 +91,7 @@ function addCliente(){
     let valor=parseFloat(document.getElementById('c_valor').value||0);
     let data=document.getElementById('c_data').value;
     if(!nome||!valor||!data)return alert('Preencha todos os campos!');
-    clientes.push({nome,valor,data,pago:false});
+    clientes.push({nome,valor,data,pago:true});
     saveData(); renderClientes(); updateDashboard();
 }
 
@@ -100,7 +100,7 @@ function addRevenda(){
     let valor=parseFloat(document.getElementById('r_valor').value||0);
     let data=document.getElementById('r_data').value;
     if(!nome||!valor||!data)return alert('Preencha todos os campos!');
-    revendas.push({nome,valor,data,pago:false});
+    revendas.push({nome,valor,data,pago:true});
     saveData(); renderRevendas(); updateDashboard();
 }
 
@@ -128,7 +128,7 @@ function renewItem(tipo,i){
     let daysInMonth = new Date(year, month, 0).getDate();
     if(day>daysInMonth) day=daysInMonth;
     item.data = `${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
-    item.pago = false;
+    item.pago = true;
     saveData(); renderClientes(); renderRevendas(); updateDashboard();
 }
 
@@ -160,9 +160,9 @@ function updateDashboard(){
         if(item.pago) totalRecebido+=item.valor;
         else if(item.data<hoje) atrasados++;
         let venc = new Date(item.data);
-        if(venc<=prox30 && !item.pago) rendimentos30+=item.valor;
-        if(venc<=prox20 && !item.pago) rendimentos20+=item.valor;
-        if(venc<=prox10 && !item.pago) rendimentos10+=item.valor;
+        if(venc<=prox30) rendimentos30+=item.valor;
+        if(venc<=prox20) rendimentos20+=item.valor;
+        if(venc<=prox10) rendimentos10+=item.valor;
     });
 
     document.getElementById('totalRecebido').innerText='R$ '+totalRecebido.toFixed(2);
