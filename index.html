@@ -36,9 +36,10 @@
     <div id="section-dashboard">
         <h1>Dashboard Financeiro</h1>
         <div class="card"><h3>Total Recebido</h3><p id="totalRecebido">R$ 0,00</p></div>
-        <div class="card"><h3>Pendentes</h3><p id="totalPendente">R$ 0,00</p></div>
         <div class="card"><h3>Atrasados</h3><p id="totalAtrasado">0</p></div>
-        <div class="card"><h3>Rendimentos Esperados (30 dias)</h3><p id="rendimentosEsperados">R$ 0,00</p></div>
+        <div class="card"><h3>Rendimentos Esperados (30 dias)</h3><p id="rendimentos30">R$ 0,00</p></div>
+        <div class="card"><h3>Rendimentos Esperados (20 dias)</h3><p id="rendimentos20">R$ 0,00</p></div>
+        <div class="card"><h3>Rendimentos Esperados (10 dias)</h3><p id="rendimentos10">R$ 0,00</p></div>
     </div>
 
     <div id="section-clientes">
@@ -149,19 +150,26 @@ function deleteItem(tipo,i){
 }
 
 function updateDashboard(){
-    let totalRecebido=0,totalPendente=0,atrasados=0,rendimentosEsperados=0;
+    let totalRecebido=0, atrasados=0, rendimentos30=0, rendimentos20=0, rendimentos10=0;
     let hoje=new Date().toISOString().slice(0,10);
-    let prox30 = new Date(); prox30.setDate(prox30.getDate()+30);
+    let prox30=new Date(); prox30.setDate(prox30.getDate()+30);
+    let prox20=new Date(); prox20.setDate(prox20.getDate()+20);
+    let prox10=new Date(); prox10.setDate(prox10.getDate()+10);
+
     [...clientes,...revendas].forEach(item=>{
         if(item.pago) totalRecebido+=item.valor;
-        else { totalPendente+=item.valor; if(item.data<hoje) atrasados++; }
+        else if(item.data<hoje) atrasados++;
         let venc = new Date(item.data);
-        if(venc<=prox30 && !item.pago) rendimentosEsperados+=item.valor;
+        if(venc<=prox30 && !item.pago) rendimentos30+=item.valor;
+        if(venc<=prox20 && !item.pago) rendimentos20+=item.valor;
+        if(venc<=prox10 && !item.pago) rendimentos10+=item.valor;
     });
+
     document.getElementById('totalRecebido').innerText='R$ '+totalRecebido.toFixed(2);
-    document.getElementById('totalPendente').innerText='R$ '+totalPendente.toFixed(2);
     document.getElementById('totalAtrasado').innerText=atrasados;
-    document.getElementById('rendimentosEsperados').innerText='R$ '+rendimentosEsperados.toFixed(2);
+    document.getElementById('rendimentos30').innerText='R$ '+rendimentos30.toFixed(2);
+    document.getElementById('rendimentos20').innerText='R$ '+rendimentos20.toFixed(2);
+    document.getElementById('rendimentos10').innerText='R$ '+rendimentos10.toFixed(2);
 }
 
 function downloadHTML(){
