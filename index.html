@@ -38,6 +38,7 @@
         <div class="card"><h3>Total Recebido</h3><p id="totalRecebido">R$ 0,00</p></div>
         <div class="card"><h3>Pendentes</h3><p id="totalPendente">R$ 0,00</p></div>
         <div class="card"><h3>Atrasados</h3><p id="totalAtrasado">0</p></div>
+        <div class="card"><h3>Rendimentos Esperados (30 dias)</h3><p id="rendimentosEsperados">R$ 0,00</p></div>
     </div>
 
     <div id="section-clientes">
@@ -148,15 +149,19 @@ function deleteItem(tipo,i){
 }
 
 function updateDashboard(){
-    let totalRecebido=0,totalPendente=0,atrasados=0;
+    let totalRecebido=0,totalPendente=0,atrasados=0,rendimentosEsperados=0;
     let hoje=new Date().toISOString().slice(0,10);
+    let prox30 = new Date(); prox30.setDate(prox30.getDate()+30);
     [...clientes,...revendas].forEach(item=>{
         if(item.pago) totalRecebido+=item.valor;
-        else {totalPendente+=item.valor; if(item.data<hoje) atrasados++;}
+        else { totalPendente+=item.valor; if(item.data<hoje) atrasados++; }
+        let venc = new Date(item.data);
+        if(venc<=prox30 && !item.pago) rendimentosEsperados+=item.valor;
     });
     document.getElementById('totalRecebido').innerText='R$ '+totalRecebido.toFixed(2);
     document.getElementById('totalPendente').innerText='R$ '+totalPendente.toFixed(2);
     document.getElementById('totalAtrasado').innerText=atrasados;
+    document.getElementById('rendimentosEsperados').innerText='R$ '+rendimentosEsperados.toFixed(2);
 }
 
 function downloadHTML(){
